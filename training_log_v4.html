@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дневник тренировок</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0f0f0f;color:#f0ede8;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;font-size:15px;min-height:100vh;}
+h1{font-size:26px;font-weight:900;color:#f0a500;letter-spacing:1px;line-height:1.1;}
+.sub{font-size:12px;color:#666;margin-top:3px;}
+.hdr{background:#1a1a1a;border-bottom:1px solid #2e2e2e;padding:14px 16px 10px;position:sticky;top:0;z-index:100;}
+.nav{display:flex;background:#1a1a1a;border-bottom:1px solid #2e2e2e;}
+.nb{flex:1;padding:13px 2px 11px;background:none;border:none;border-bottom:2px solid transparent;color:#666;font-size:10px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;}
+.nb.on{color:#f0a500;border-bottom-color:#f0a500;}
+.scr{display:none;padding:14px 14px 110px;}
+.scr.on{display:block;}
+.dtabs{display:flex;gap:8px;margin-bottom:14px;}
+.dt{padding:8px 18px;border-radius:30px;border:1px solid #2e2e2e;background:transparent;color:#666;font-size:13px;font-weight:700;cursor:pointer;}
+.dt.on{background:#f0a500;border-color:#f0a500;color:#000;}
+.card{background:#1a1a1a;border:1px solid #2e2e2e;border-radius:12px;margin-bottom:8px;overflow:hidden;}
+.chdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;}
+.chdr:active{background:#222;}
+.exn{font-weight:700;font-size:14px;}
+.exi{font-size:11px;color:#666;margin-top:2px;}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-right:4px;}
+.tb{background:#1a2a3a;color:#5ab4f5;}
+.tc{background:#2a1f0a;color:#f5a623;}
+.tl{background:#0e2a18;color:#2ecc71;}
+.ts{background:#2a1a08;color:#e88a1a;}
+.ta{background:#2a1020;color:#e088b8;}
+.arr{font-size:18px;color:#555;transition:transform 0.2s;margin-left:8px;flex-shrink:0;}
+.card.open .arr{transform:rotate(180deg);}
+.prev{margin:0 14px 8px;background:#222;border:1px solid #2e2e2e;border-left:3px solid #f0a500;border-radius:8px;padding:7px 10px;font-size:11px;color:#666;}
+.prev b{color:#f0ede8;}
+.sbody{display:none;padding:0 14px 12px;}
+.card.open .sbody{display:block;}
+.shdr{display:grid;grid-template-columns:26px 1fr 1fr 34px;gap:6px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;padding:0 2px;}
+.srow{display:grid;grid-template-columns:26px 1fr 1fr 34px;gap:6px;align-items:center;margin-bottom:6px;}
+.sn{font-size:12px;color:#555;font-weight:700;text-align:center;}
+.si{background:#222;border:1px solid #2e2e2e;border-radius:8px;color:#f0ede8;font-size:15px;font-weight:700;padding:8px;width:100%;outline:none;-webkit-appearance:none;}
+.si:focus{border-color:#f0a500;}
+.si::placeholder{color:#3a3a3a;font-weight:400;}
+.ss{background:#222;border:1px solid #2e2e2e;border-radius:8px;color:#f0ede8;font-size:15px;font-weight:700;padding:8px 4px;width:100%;outline:none;-webkit-appearance:none;appearance:none;text-align:center;cursor:pointer;}
+.ss:focus{border-color:#f0a500;}
+.sd{background:transparent;border:1px solid #2e2e2e;border-radius:8px;color:#555;font-size:15px;cursor:pointer;width:34px;height:38px;display:flex;align-items:center;justify-content:center;}
+.sd.done{background:#2ecc71;border-color:#2ecc71;color:#fff;}
+.savebtn{position:fixed;bottom:18px;left:14px;right:14px;background:#f0a500;color:#000;border:none;border-radius:14px;font-size:20px;font-weight:900;letter-spacing:1px;padding:16px;cursor:pointer;z-index:99;}
+.savebtn:active{opacity:0.85;}
+.toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%) translateY(16px);background:#2ecc71;color:#fff;padding:10px 24px;border-radius:30px;font-weight:700;font-size:14px;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:200;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.ptabs{display:flex;gap:6px;margin-bottom:14px;}
+.pt{flex:1;padding:8px 4px;border-radius:8px;border:1px solid #2e2e2e;background:transparent;color:#666;font-size:12px;font-weight:700;cursor:pointer;text-align:center;}
+.pt.on{background:#f0a500;border-color:#f0a500;color:#000;}
+.exsel{background:#222;border:1px solid #2e2e2e;border-radius:10px;color:#f0ede8;font-size:14px;padding:11px 12px;width:100%;outline:none;-webkit-appearance:none;appearance:none;margin-bottom:14px;}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+.sbox{background:#1a1a1a;border:1px solid #2e2e2e;border-radius:10px;padding:12px 8px;text-align:center;}
+.sval{font-size:22px;font-weight:900;color:#f0a500;line-height:1;}
+.slbl{font-size:10px;color:#555;margin-top:3px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;}
+.sdlt{font-size:11px;margin-top:3px;font-weight:700;}
+.up{color:#2ecc71;}.dn{color:#e74c3c;}.eq{color:#555;}
+.ccrd{background:#1a1a1a;border:1px solid #2e2e2e;border-radius:12px;padding:14px;margin-bottom:12px;}
+.ctitle{font-weight:700;font-size:13px;margin-bottom:4px;}
+.csub{font-size:11px;color:#555;margin-bottom:12px;}
+.cwrap{position:relative;height:200px;}
+.drange{display:flex;gap:8px;margin-bottom:10px;}
+.drange label{flex:1;}
+.dlbl{font-size:11px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px;}
+.di{background:#222;border:1px solid #2e2e2e;border-radius:10px;color:#f0ede8;font-size:13px;padding:9px 10px;width:100%;outline:none;-webkit-appearance:none;appearance:none;}
+.di:focus{border-color:#f0a500;}
+.ract{display:flex;gap:8px;margin-bottom:14px;}
+.fbtn{flex:1;background:#222;border:1px solid #2e2e2e;border-radius:10px;color:#f0ede8;font-size:13px;font-weight:700;padding:10px;cursor:pointer;}
+.pbtn{background:#f0a500;color:#000;border:none;border-radius:10px;font-size:15px;font-weight:900;padding:10px 16px;cursor:pointer;white-space:nowrap;}
+.rwk{background:#1a1a1a;border:1px solid #2e2e2e;border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.rwkh{background:#222;padding:10px 14px;font-size:16px;font-weight:900;color:#f0a500;border-bottom:1px solid #2e2e2e;letter-spacing:1px;}
+.rdlbl{font-size:11px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:10px 14px 4px;}
+.rex{padding:7px 14px;border-bottom:1px solid #2e2e2e;}
+.rex:last-child{border-bottom:none;}
+.rexn{font-size:13px;font-weight:700;}
+.rsets{font-size:11px;color:#666;margin-top:3px;display:flex;flex-wrap:wrap;gap:5px;}
+.chip{background:#222;border:1px solid #2e2e2e;border-radius:6px;padding:2px 8px;color:#f0ede8;}
+.rvol{font-size:11px;color:#f0a500;margin-top:3px;font-weight:700;}
+.empty{text-align:center;padding:50px 20px;color:#555;font-size:13px;}
+.ebig{font-size:44px;display:block;margin-bottom:10px;}
+@media print{
+  body{background:#fff;color:#000;}
+  .hdr,.nav,.savebtn,.drange,.ract,.toast,.dtabs,.ptabs,.exsel,.stats,.ccrd{display:none!important;}
+  .scr{display:none!important;}
+  #s-report{display:block!important;padding:16px;}
+  .rwk{border:1px solid #ccc;background:#fff;}
+  .rwkh{background:#f0f0f0;color:#333;}
+  .rdlbl{color:#666;}
+  .rexn{color:#000;}
+  .chip{background:#f5f5f5;border-color:#ddd;color:#000;}
+  .rvol{color:#c07a00;}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <h1>ДНЕВНИК ТРЕНИРОВОК</h1>
+  <div class="sub">Фулбади &middot; Пн / Ср / Пт</div>
+</div>
+<div class="nav">
+  <button class="nb on" id="nb-log" onclick="goScreen('log')">&#128203; Тренировка</button>
+  <button class="nb" id="nb-progress" onclick="goScreen('progress')">&#128200; Прогресс</button>
+  <button class="nb" id="nb-report" onclick="goScreen('report')">&#128196; Отчёт</button>
+</div>
+
+<div class="scr on" id="s-log">
+  <div class="dtabs" style="margin-top:14px;">
+    <button class="dt on" id="dt-mon" onclick="goDay('mon')">Пн</button>
+    <button class="dt" id="dt-wed" onclick="goDay('wed')">Ср</button>
+    <button class="dt" id="dt-fri" onclick="goDay('fri')">Пт</button>
+  </div>
+  <div id="exlist"></div>
+</div>
+
+<div class="scr" id="s-progress">
+  <div style="margin-top:14px;">
+    <div class="ptabs">
+      <button class="pt on" id="pt1" onclick="goPeriod(1)">1 нед.</button>
+      <button class="pt" id="pt2" onclick="goPeriod(2)">2 нед.</button>
+      <button class="pt" id="pt4" onclick="goPeriod(4)">4 нед.</button>
+      <button class="pt" id="pt8" onclick="goPeriod(8)">8 нед.</button>
+    </div>
+    <select class="exsel" id="exsel" onchange="drawProgress()">
+      <option value="">&#8212; Выбери упражнение &#8212;</option>
+    </select>
+    <div class="stats" id="statrow" style="display:none;"></div>
+    <div class="ccrd" id="ccrd" style="display:none;">
+      <div class="ctitle">Объём нагрузки</div>
+      <div class="csub">кг &times; повторения за тренировку</div>
+      <div class="cwrap"><canvas id="cvs"></canvas></div>
+    </div>
+    <div class="empty" id="pempty"><span class="ebig">&#128202;</span>Выбери упражнение.<br>Данные появятся после сохранённых тренировок.</div>
+  </div>
+</div>
+
+<div class="scr" id="s-report">
+  <div style="margin-top:14px;">
+    <div class="drange">
+      <label><div class="dlbl">С даты</div><input type="date" class="di" id="dfrom"></label>
+      <label><div class="dlbl">По дату</div><input type="date" class="di" id="dto"></label>
+    </div>
+    <div class="ract">
+      <button class="fbtn" onclick="drawReport()">Показать</button>
+      <button class="fbtn" onclick="clearDates()">Все записи</button>
+      <button class="pbtn" onclick="window.print()">ПЕЧАТЬ</button>
+    </div>
+    <div id="rcontent"></div>
+  </div>
+</div>
+
+<button class="savebtn" id="savebtn" onclick="doSave()">СОХРАНИТЬ ТРЕНИРОВКУ</button>
+<div class="toast" id="toast">Сохранено &#10003;</div>
+
+<script>
+var PLAN = {
+  mon:[
+    {id:'m1',name:'Гравитрон',sets:3,reps:'8-12',cls:'tb',tl:'Спина'},
+    {id:'m2',name:'Жим от груди в блоке',sets:3,reps:'10-12',cls:'tc',tl:'Грудь'},
+    {id:'m3',name:'Пек-Дек (приведение)',sets:3,reps:'12-15',cls:'tc',tl:'Грудь'},
+    {id:'m4',name:'Жим ногами',sets:3,reps:'8-12',cls:'tl',tl:'Ноги'},
+    {id:'m5',name:'Махи гантелями в стороны',sets:3,reps:'10-15',cls:'ts',tl:'Плечи'},
+    {id:'m6',name:'Трицепс — прямая рукоятка',sets:3,reps:'8-12',cls:'ta',tl:'Руки'}
+  ],
+  wed:[
+    {id:'w1',name:'Тяга горизонтального блока',sets:3,reps:'8-12',cls:'tb',tl:'Спина'},
+    {id:'w2',name:'Тяга вертикального блока',sets:3,reps:'8-12',cls:'tb',tl:'Спина'},
+    {id:'w3',name:'Жим гантелей лёжа',sets:3,reps:'8-12',cls:'tc',tl:'Грудь'},
+    {id:'w4',name:'Разгибания ног',sets:3,reps:'8-12',cls:'tl',tl:'Ноги'},
+    {id:'w5',name:'Сгибание ног',sets:3,reps:'8-12',cls:'tl',tl:'Ноги'},
+    {id:'w6',name:'Трицепс — V-образная рукоятка',sets:3,reps:'8-12',cls:'ta',tl:'Руки'}
+  ],
+  fri:[
+    {id:'f1',name:'Жим гантелей на наклонной скамье',sets:3,reps:'8-12',cls:'tc',tl:'Грудь'},
+    {id:'f2',name:'Хаммер (рычажный тренажёр)',sets:3,reps:'8-12',cls:'tb',tl:'Спина'},
+    {id:'f3',name:'Выпады с гантелями',sets:3,reps:'8-12',cls:'tl',tl:'Ноги'},
+    {id:'f4',name:'Махи гантелями в стороны',sets:3,reps:'10-15',cls:'ts',tl:'Плечи'},
+    {id:'f5',name:'Трицепс — канатная рукоятка',sets:3,reps:'8-12',cls:'ta',tl:'Руки'}
+  ]
+};
+var DLABELS={mon:'Понедельник',wed:'Среда',fri:'Пятница'};
+var ALL=PLAN.mon.concat(PLAN.wed,PLAN.fri);
+var REPS=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
+
+// Storage с fallback на in-memory (для iOS когда file:// блокирует localStorage)
+var MEM={};
+function sget(k){try{var v=window.localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return MEM[k]||null;}}
+function sset(k,v){try{window.localStorage.setItem(k,JSON.stringify(v));}catch(e){MEM[k]=v;}}
+function sdel(k){try{window.localStorage.removeItem(k);}catch(e){delete MEM[k];}}
+
+function getH(){return sget('th')||[];}
+function setH(h){sset('th',h);}
+function getCur(d){return sget('tc_'+d)||{};}
+function setCur(d,v){sset('tc_'+d,v);}
+
+var curDay='mon', curPer=1, chartI=null;
+
+function goScreen(n){
+  ['log','progress','report'].forEach(function(x){
+    document.getElementById('s-'+x).className='scr'+(x===n?' on':'');
+    document.getElementById('nb-'+x).className='nb'+(x===n?' on':'');
+  });
+  document.getElementById('savebtn').style.display=n==='log'?'block':'none';
+  if(n==='progress') drawProgress();
+  if(n==='report') drawReport();
+}
+
+function goDay(d){
+  curDay=d;
+  ['mon','wed','fri'].forEach(function(x){
+    document.getElementById('dt-'+x).className='dt'+(x===d?' on':'');
+  });
+  renderLog();
+}
+
+function mkes(n){var a=[];for(var i=0;i<n;i++)a.push({w:'',r:'',d:false});return a;}
+
+function renderLog(){
+  var exs=PLAN[curDay], cur=getCur(curDay), hist=getH();
+  var prev={};
+  var pe=hist.filter(function(e){return e.day===curDay;}).sort(function(a,b){return b.ts-a.ts;});
+  if(pe.length) prev=pe[0].data;
+
+  var html='';
+  exs.forEach(function(ex){
+    var sets=cur[ex.id]||mkes(ex.sets);
+    var sh='';
+    for(var i=0;i<ex.sets;i++){
+      var s=sets[i]||{w:'',r:'',d:false};
+      var opts='<option value="">—</option>'+REPS.map(function(r){
+        return '<option value="'+r+'"'+(String(s.r)===String(r)?' selected':'')+'>'+r+'</option>';
+      }).join('');
+      sh+='<div class="srow">'+
+        '<div class="sn">'+(i+1)+'</div>'+
+        '<input class="si" type="number" inputmode="decimal" placeholder="кг" value="'+(s.w||'')+'" '+
+          'onchange="upd(\''+ex.id+'\','+i+',\'w\',this.value)">'+
+        '<select class="ss" onchange="upd(\''+ex.id+'\','+i+',\'r\',this.value)">'+opts+'</select>'+
+        '<button class="sd'+(s.d?' done':'')+'" onclick="togD(\''+ex.id+'\','+i+',this)">✓</button>'+
+      '</div>';
+    }
+    var badge='';
+    if(prev[ex.id]){
+      var ps=prev[ex.id].filter(function(s){return s.w||s.r;});
+      if(ps.length){
+        var sum=ps.map(function(s){return '<b>'+(s.w||'—')+' кг</b> x '+(s.r||'—');}).join(' · ');
+        badge='<div class="prev">Прошлый раз: '+sum+'</div>';
+      }
+    }
+    html+='<div class="card" id="c_'+ex.id+'">'+
+      '<div class="chdr" onclick="togC(\''+ex.id+'\')">'+
+        '<div><div class="exn">'+ex.name+'</div>'+
+        '<div class="exi"><span class="tag '+ex.cls+'">'+ex.tl+'</span>'+ex.sets+' подх. · '+ex.reps+' повт.</div></div>'+
+        '<div class="arr">&#8964;</div>'+
+      '</div>'+badge+
+      '<div class="sbody">'+
+        '<div class="shdr"><div>#</div><div>Вес</div><div>Повт.</div><div></div></div>'+sh+
+      '</div></div>';
+  });
+  document.getElementById('exlist').innerHTML=html;
+}
+
+function togC(id){document.getElementById('c_'+id).classList.toggle('open');}
+
+function upd(exId,idx,f,v){
+  var d=getCur(curDay), ex=ALL.filter(function(e){return e.id===exId;})[0];
+  if(!d[exId])d[exId]=mkes(ex.sets);
+  if(!d[exId][idx])d[exId][idx]={w:'',r:'',d:false};
+  d[exId][idx][f]=v; setCur(curDay,d);
+}
+
+function togD(exId,idx,btn){
+  var d=getCur(curDay), ex=ALL.filter(function(e){return e.id===exId;})[0];
+  if(!d[exId])d[exId]=mkes(ex.sets);
+  if(!d[exId][idx])d[exId][idx]={w:'',r:'',d:false};
+  d[exId][idx].d=!d[exId][idx].d; setCur(curDay,d);
+  btn.className='sd'+(d[exId][idx].d?' done':'');
+}
+
+function doSave(){
+  var hist=getH();
+  ['mon','wed','fri'].forEach(function(day){
+    var d=getCur(day);
+    var has=Object.keys(d).some(function(k){return d[k].some(function(s){return s.w||s.r;});});
+    if(has){
+      var now=Date.now();
+      hist.push({day:day,week:wkNum(now),ts:now,date:fmtD(now),data:d});
+      sdel('tc_'+day);
+    }
+  });
+  setH(hist); renderLog();
+  var t=document.getElementById('toast');
+  t.className='toast show';
+  setTimeout(function(){t.className='toast';},2200);
+}
+
+function wkNum(ts){
+  var d=new Date(ts),s=new Date(d.getFullYear(),0,1);
+  return Math.ceil(((d-s)/86400000+s.getDay()+1)/7);
+}
+function fmtD(ts){return new Date(ts).toLocaleDateString('ru-RU');}
+function ts2s(ts){return new Date(ts).toISOString().slice(0,10);}
+
+// Progress
+function initSel(){
+  var sel=document.getElementById('exsel');
+  sel.innerHTML='<option value="">— Выбери упражнение —</option>';
+  ['mon','wed','fri'].forEach(function(day){
+    var og=document.createElement('optgroup');
+    og.label=DLABELS[day];
+    PLAN[day].forEach(function(ex){
+      var o=document.createElement('option');
+      o.value=ex.id; o.textContent=ex.name;
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+}
+
+function goPeriod(n){
+  curPer=n;
+  [1,2,4,8].forEach(function(v){
+    document.getElementById('pt'+v).className='pt'+(v===n?' on':'');
+  });
+  drawProgress();
+}
+
+function calcVol(entry,exId){
+  return (entry.data[exId]||[]).reduce(function(s,x){
+    return s+(parseFloat(x.w)||0)*(parseInt(x.r)||0);
+  },0);
+}
+
+function drawProgress(){
+  var exId=document.getElementById('exsel').value;
+  var empty=document.getElementById('pempty');
+  var sr=document.getElementById('statrow');
+  var cc=document.getElementById('ccrd');
+  if(!exId){empty.style.display='block';sr.style.display='none';cc.style.display='none';return;}
+
+  var hist=getH(), cut=Date.now()-curPer*7*24*3600*1000;
+  var rows=hist.filter(function(e){return e.data[exId]&&e.ts>=cut;}).sort(function(a,b){return a.ts-b.ts;});
+  if(!rows.length){empty.style.display='block';sr.style.display='none';cc.style.display='none';return;}
+  empty.style.display='none';
+
+  var vols=rows.map(function(e){return calcVol(e,exId);});
+  var mxW=rows.map(function(e){
+    var ss=(e.data[exId]||[]).filter(function(s){return s.w;});
+    return ss.length?Math.max.apply(null,ss.map(function(s){return parseFloat(s.w)||0;})):0;
+  });
+  var lV=vols[vols.length-1],fV=vols[0],maxV=Math.max.apply(null,vols);
+  var dlt=lV-fV,pct=fV>0?Math.round(dlt/fV*100):0;
+  var dstr=(dlt>=0?'+':'')+Math.round(dlt),dcls=dlt>0?'up':dlt<0?'dn':'eq';
+  var bW=Math.max.apply(null,mxW);
+
+  sr.style.display='grid';
+  sr.innerHTML='<div class="sbox"><div class="sval">'+Math.round(lV)+'</div><div class="slbl">Объём</div><div class="sdlt '+dcls+'">'+dstr+' кг</div></div>'+
+    '<div class="sbox"><div class="sval">'+Math.round(maxV)+'</div><div class="slbl">Макс.объём</div></div>'+
+    '<div class="sbox"><div class="sval">'+(bW>0?bW:'—')+'</div><div class="slbl">Макс.вес кг</div>'+(pct?'<div class="sdlt '+dcls+'">'+(pct>0?'+':'')+pct+'%</div>':'')+'</div>';
+
+  cc.style.display='block';
+  if(typeof Chart==='undefined'){
+    document.querySelector('#ccrd .cwrap').innerHTML='<div style="color:#555;font-size:12px;padding:40px 0;text-align:center;">Для графиков нужен интернет.</div>';
+    return;
+  }
+  if(chartI) chartI.destroy();
+  chartI=new Chart(document.getElementById('cvs'),{
+    type:'bar',
+    data:{
+      labels:rows.map(function(e){return e.date;}),
+      datasets:[{
+        data:vols,
+        backgroundColor:vols.map(function(v,i){return i===vols.length-1?'rgba(240,165,0,0.9)':'rgba(240,165,0,0.35)';}),
+        borderColor:'#f0a500',borderWidth:1,borderRadius:5
+      },{
+        type:'line',data:vols,
+        borderColor:'rgba(46,204,113,0.8)',borderWidth:2,
+        pointBackgroundColor:'#2ecc71',pointRadius:3,
+        tension:0.35,fill:false,yAxisID:'y'
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#555',font:{size:10}},grid:{color:'#222'}},
+        y:{ticks:{color:'#555',font:{size:10}},grid:{color:'#222'}}
+      }
+    }
+  });
+}
+
+// Report
+function clearDates(){
+  document.getElementById('dfrom').value='';
+  document.getElementById('dto').value='';
+  drawReport();
+}
+
+function drawReport(){
+  var from=document.getElementById('dfrom').value;
+  var to=document.getElementById('dto').value;
+  var hist=getH().slice();
+  if(from) hist=hist.filter(function(e){return ts2s(e.ts)>=from;});
+  if(to)   hist=hist.filter(function(e){return ts2s(e.ts)<=to;});
+  hist.sort(function(a,b){return b.ts-a.ts;});
+  if(!hist.length){
+    document.getElementById('rcontent').innerHTML='<div class="empty"><span class="ebig">📄</span>Нет записей за выбранный период.</div>';
+    return;
+  }
+  var byW={};
+  hist.forEach(function(e){var wk=e.week||wkNum(e.ts);if(!byW[wk])byW[wk]=[];byW[wk].push(e);});
+  var html='';
+  Object.keys(byW).sort(function(a,b){return b-a;}).forEach(function(wk){
+    var byD={};
+    byW[wk].forEach(function(e){if(!byD[e.day])byD[e.day]=[];byD[e.day].push(e);});
+    var dh='';
+    ['mon','wed','fri'].forEach(function(day){
+      if(!byD[day])return;
+      var ent=byD[day].sort(function(a,b){return b.ts-a.ts;})[0];
+      dh+='<div class="rdlbl">'+DLABELS[day]+' · '+ent.date+'</div>';
+      PLAN[day].forEach(function(ex){
+        var sets=ent.data[ex.id];if(!sets)return;
+        var chips=sets.map(function(s,i){return '<span class="chip">'+(i+1)+': '+(s.w||'—')+' кг x '+(s.r||'—')+'</span>';}).join('');
+        var v=calcVol(ent,ex.id);
+        dh+='<div class="rex"><div class="rexn">'+ex.name+'</div><div class="rsets">'+chips+'</div>'+(v>0?'<div class="rvol">Объём: '+Math.round(v)+' кг</div>':'')+'</div>';
+      });
+    });
+    html+='<div class="rwk"><div class="rwkh">Неделя '+wk+'</div>'+dh+'</div>';
+  });
+  document.getElementById('rcontent').innerHTML=html;
+}
+
+// Init
+initSel();
+renderLog();
+var _t=new Date(),_m=new Date(_t);
+_m.setDate(_t.getDate()-30);
+document.getElementById('dto').value=ts2s(_t.getTime());
+document.getElementById('dfrom').value=ts2s(_m.getTime());
+
+// Chart.js — только после загрузки страницы, не блокирует
+window.addEventListener('load',function(){
+  var sc=document.createElement('script');
+  sc.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+  document.body.appendChild(sc);
+});
+</script>
+</body>
+</html>
